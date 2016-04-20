@@ -2,5 +2,5 @@
 
 ##### Function invocation
 ```matlab
-dataProcessingORL(SOURCE_PATH);
+dataProcessingORL('SOURCE_PATH');
 ```
