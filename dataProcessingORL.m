@@ -24,6 +24,12 @@ function [] = dataProcessingORL(data,phases_summer,phases_winter)
     cm = 6; % Current Month (Initial condition)
     cy = 1974; % Current Year (Initial condition
     lPos = 0;
+    
+    [data,err] = readNC(data,'olr');
+    if ~isnan(err)
+        disp(strcat('[ERROR]',{' '},char(err)));
+        return;
+    end
     % Phases for summer months
     p1_s = zeros(length(data(1,:,1)),length(data(1,1,:)));
     p2_s = zeros(length(data(1,:,1)),length(data(1,1,:)));
@@ -230,4 +236,36 @@ function [] = dataProcessingORL(data,phases_summer,phases_winter)
 %     contour(p6_w);
 %     contour(p7_w);
 %     contour(p8_w);
+end
+
+function [data,error] = readNC(path,var2Read)
+    var2Readid = 99999;
+	error = NaN;
+    try
+        % Catching data from original file
+        ncid = netcdf.open(char(path));%,'NC_NOWRITE');
+        [~,nvar,~,~] = netcdf.inq(ncid);
+        for i=0:1:nvar-1
+            [varname,~,~,~] = netcdf.inqVar(ncid,i);
+            switch(varname)
+                case var2Read
+                    var2Readid = i;
+            end
+        end
+        %data = netcdf.getVar(ncid,var2Readid,'double');
+        data = permute(netcdf.getVar(ncid,var2Readid,'double'),[2 1 3]);
+        if isempty(data)
+            error = 'Empty dataset';
+        end
+        netcdf.close(ncid);
+    catch exception
+        data = [];
+        try
+            netcdf.close(ncid)
+        catch
+            error = 'I/O ERROR';
+            return;
+        end
+        error = exception.message;
+    end
 end
